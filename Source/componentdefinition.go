@@ -196,6 +196,7 @@ type ComponentDefinitionMember struct {
 	Class string `xml:"class,attr"`
 	Rows int `xml:"rows,attr"`
 	Columns int `xml:"columns,attr"`
+	MemberDescription string `xml:"description,attr"`
 }
 
 // ComponentDefinitionStruct definition of all structs provided by the component's API

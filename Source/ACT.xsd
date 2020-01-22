@@ -103,7 +103,7 @@
 			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="99999"/>
 		</xs:sequence>
 		<xs:attribute name="name" type="ST_Name" use="required"/>
-		<xs:attribute name="description" type="ST_ErrorDescription" use="optional"/>
+		<xs:attribute name="description" type="ST_Description" use="optional"/>
 		<xs:anyAttribute namespace="##other" processContents="lax"/>
 	</xs:complexType>
 	
@@ -112,7 +112,7 @@
 		<xs:attribute name="type" type="ST_ScalarType" use="required"/>
 		<xs:attribute name="rows" type="xs:positiveInteger" use="optional" default="1"/>
 		<xs:attribute name="columns" type="xs:positiveInteger" use="optional" default="1"/>
-		<xs:attribute name="description" type="ST_ErrorDescription" use="optional"/>
+		<xs:attribute name="description" type="ST_Description" use="optional"/>
 		<xs:anyAttribute namespace="##other" processContents="lax"/>
 	</xs:complexType>
 	
@@ -122,14 +122,14 @@
 			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="99999"/>
 		</xs:sequence>
 		<xs:attribute name="name" type="ST_Name" use="required"/>
-		<xs:attribute name="description" type="ST_ErrorDescription" use="optional"/>
+		<xs:attribute name="description" type="ST_Description" use="optional"/>
 		<xs:anyAttribute namespace="##other" processContents="lax"/>
 	</xs:complexType>
 	
 	<xs:complexType name="CT_Option">
 		<xs:attribute name="name" type="ST_Name" use="required"/>
 		<xs:attribute name="value" type="xs:nonNegativeInteger" use="required"/>
-		<xs:attribute name="description" type="ST_ErrorDescription" use="optional"/>
+		<xs:attribute name="description" type="ST_Description" use="optional"/>
 		<xs:anyAttribute namespace="##other" processContents="lax"/>
 	</xs:complexType>
 	
@@ -197,7 +197,7 @@
 			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="99999"/>
 		</xs:sequence>
 		<xs:attribute name="name" type="ST_Name" use="required"/>
-		<xs:attribute name="description" type="ST_ErrorDescription" use="optional"/>
+		<xs:attribute name="description" type="ST_Description" use="optional"/>
 		<xs:anyAttribute namespace="##other" processContents="lax"/>
 	</xs:complexType>
 	

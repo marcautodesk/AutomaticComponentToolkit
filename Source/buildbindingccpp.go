@@ -569,7 +569,7 @@ func writeDynamicCPPMethodDeclaration(method ComponentDefinitionMethod, w Langua
 }
 
 func writeDynamicCPPMethod(method ComponentDefinitionMethod, w LanguageWriter, NameSpace string, ClassIdentifier string, ClassName string,
-	implementationLines []string, isGlobal bool, includeComments bool, doNotThrow bool, useCPPTypes bool, ExplicitLinking bool) error {
+	implementationLines []string, isGlobal bool, includeComments bool, doNotThrow bool, useCPPTypes bool, ExplicitLinking bool, ThreadSafeArrayReturn bool) error {
 
 	CMethodName := ""
 	requiresInitCall := false
@@ -828,6 +828,12 @@ func writeDynamicCPPMethod(method ComponentDefinitionMethod, w LanguageWriter, N
 	}
 
 	w.Writeln("  {")
+
+	threadSafeArrayReturnRequired := ThreadSafeArrayReturn && requiresInitCall
+	if threadSafeArrayReturnRequired {
+		w.Writeln("    std::lock_guard<std::mutex> lock(%s);", getThreadSafeArrayReturnMutexName())
+	}
+
 	w.Writelns("    ", definitionCodeLines)
 	if requiresInitCall {
 		w.Writeln("    %s%s(%s)%s;", checkErrorCodeBegin, CMethodName, initCallParameters, checkErrorCodeEnd)
@@ -1087,6 +1093,13 @@ func getBindingCppVariableName(param ComponentDefinitionParam) string {
 	return ""
 }
 
+func getThreadSafeArrayReturnMutexName() string {
+	return "ArrayReturnMutex"
+}
+
+func isThreadSafeArrayReturn(param ComponentDefinitionClass) bool {
+	return param.ArrayReturnOption == "ThreadSafe"
+}
 
 func buildCppHeader(component ComponentDefinition, w LanguageWriter, NameSpace string, BaseName string, ClassIdentifier string, ExplicitLinking bool) error {
 	useCPPTypes := true
@@ -1134,6 +1147,7 @@ func buildCppHeader(component ComponentDefinition, w LanguageWriter, NameSpace s
 	w.Writeln("#include <array>")
 	w.Writeln("#include <string>")
 	w.Writeln("#include <memory>")
+	w.Writeln("#include <mutex>")
 	w.Writeln("#include <vector>")
 	w.Writeln("#include <exception>")
 	w.Writeln("")
@@ -1397,6 +1411,8 @@ func buildCppHeader(component ComponentDefinition, w LanguageWriter, NameSpace s
 		class := component.Classes[i]
 		cppClassName := cppClassPrefix + ClassIdentifier + class.ClassName
 
+		threadSafeArrayReturn := isThreadSafeArrayReturn(class)
+
 		cppParentClassName := ""
 		inheritanceSpecifier := ""
 		if !component.isBaseClass(class) {
@@ -1413,6 +1429,12 @@ func buildCppHeader(component ComponentDefinition, w LanguageWriter, NameSpace s
 		w.Writeln(" Class %s ", cppClassName)
 		w.Writeln("**************************************************************************************************************************/")
 		w.Writeln("class %s %s{", cppClassName, inheritanceSpecifier)
+
+		if threadSafeArrayReturn {
+			w.Writeln("private:")
+			w.Writeln("  std::mutex %s", getThreadSafeArrayReturnMutexName())
+		}
+
 		w.Writeln("public:")
 		w.Writeln("  static inline const std::string &getClassName();")
 		w.Writeln("  static inline const %s_ClassHash &getClassHash();", NameSpace)
@@ -1530,7 +1552,7 @@ func buildCppHeader(component ComponentDefinition, w LanguageWriter, NameSpace s
 			implementationLines = append(implementationLines, fmt.Sprintf("  throw E%sException(%s_ERROR_COULDNOTLOADLIBRARY, \"Unknown namespace \" + %s);", NameSpace, strings.ToUpper(NameSpace), sParamName ))
 		}
 
-		err = writeDynamicCPPMethod(method, w, NameSpace, ClassIdentifier, "Wrapper", implementationLines, true, true, false, useCPPTypes, ExplicitLinking)
+		err = writeDynamicCPPMethod(method, w, NameSpace, ClassIdentifier, "Wrapper", implementationLines, true, true, false, useCPPTypes, ExplicitLinking, false)
 		if err != nil {
 			return err
 		}
@@ -1607,7 +1629,7 @@ func buildCppHeader(component ComponentDefinition, w LanguageWriter, NameSpace s
 		w.Writeln("   */")
 		for j := 0; j < len(class.Methods); j++ {
 			method := class.Methods[j]
-			err := writeDynamicCPPMethod(method, w, NameSpace, ClassIdentifier, class.ClassName, make([]string,0), false, true, false, useCPPTypes, ExplicitLinking)
+			err := writeDynamicCPPMethod(method, w, NameSpace, ClassIdentifier, class.ClassName, make([]string,0), false, true, false, useCPPTypes, ExplicitLinking, isThreadSafeArrayReturn(class))
 			if err != nil {
 				return err
 			}
